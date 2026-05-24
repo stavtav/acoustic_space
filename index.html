@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acoustic Space</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: #121212;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 32px 24px 80px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .app { max-width: 560px; width: 100%; }
+
+  /* Header */
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+  .header h1 { font-weight: 700; font-size: 20px; letter-spacing: -0.3px; color: #fff; margin-bottom: 2px; }
+  .header .sub { font-family: 'DM Mono', monospace; font-size: 11px; color: #686868; }
+  .lang-group { display: flex; gap: 4px; }
+  .lang-btn {
+    cursor: pointer; padding: 5px 12px; border-radius: 14px;
+    border: 1px solid #333; background: transparent;
+    color: #777; font-family: 'DM Mono', monospace; font-size: 11px;
+    font-weight: 500; transition: all .15s;
+  }
+  .lang-btn.active { color: #fff; background: #1DB954; border-color: #1DB954; }
+  .lang-btn:hover:not(.active) { border-color: #555; color: #aaa; }
+
+  /* Prompt */
+  .prompt-box {
+    font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 500;
+    line-height: 1.7; color: #fff; padding: 22px 24px;
+    background: #1a1a1a; border: 1px solid #333; border-radius: 10px;
+    min-height: 68px; letter-spacing: .1px;
+  }
+  .prompt-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+
+  .btn {
+    cursor: pointer; padding: 8px 20px; border-radius: 20px;
+    border: 1px solid #333; background: #1a1a1a;
+    color: #b0b0b0; font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: .4px; text-transform: uppercase; transition: all .15s;
+  }
+  .btn:hover { border-color: #555; color: #e0e0e0; background: #252525; }
+  .btn.success { color: #1DB954; border-color: #1DB954; }
+
+  /* Genre */
+  .genre-section { position: relative; margin-bottom: 32px; }
+  .section-label {
+    font-family: 'DM Mono', monospace; font-size: 11px; color: #a0a0a0;
+    text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 6px;
+  }
+  .genre-trigger {
+    cursor: pointer; padding: 12px 18px; background: #1a1a1a;
+    border: 1px solid #333; border-radius: 8px;
+    display: flex; justify-content: space-between; align-items: center;
+    width: 100%; color: #e0e0e0; font-family: 'DM Mono', monospace; font-size: 14px;
+    transition: all .15s;
+  }
+  .genre-trigger:hover { border-color: #555; }
+  .genre-trigger .arrow { color: #686868; font-size: 10px; }
+
+  .genre-drop {
+    position: absolute; left: 0; right: 0; top: calc(100% + 4px);
+    background: #242424; border: 1px solid #444; border-radius: 8px;
+    max-height: 300px; overflow-y: auto; z-index: 50;
+    box-shadow: 0 12px 48px rgba(0,0,0,.6);
+    display: none;
+  }
+  .genre-drop.open { display: block; animation: fadeUp .15s ease; }
+  .genre-drop::-webkit-scrollbar { width: 6px; }
+  .genre-drop::-webkit-scrollbar-track { background: #242424; border-radius: 0 8px 8px 0; }
+  .genre-drop::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+
+  .genre-input {
+    width: 100%; padding: 12px 16px; background: #1a1a1a;
+    border: none; border-bottom: 1px solid #333;
+    color: #e0e0e0; font-family: 'DM Mono', monospace; font-size: 13px;
+    outline: none; position: sticky; top: 0;
+  }
+  .genre-input::placeholder { color: #666; }
+
+  .genre-opt {
+    padding: 10px 16px; cursor: pointer; font-family: 'DM Mono', monospace;
+    font-size: 13px; color: #b0b0b0; transition: all .1s;
+    border-bottom: 1px solid #2a2a2a;
+  }
+  .genre-opt:hover { background: #2e2e2e; color: #fff; }
+  .genre-opt.active { color: #1DB954; background: #2a2a2a; }
+
+  /* Axis */
+  .axis { margin-bottom: 28px; }
+  .axis-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .axis-name {
+    font-family: 'DM Mono', monospace; font-size: 11px; color: #a0a0a0;
+    text-transform: uppercase; letter-spacing: 1.5px;
+  }
+  .axis-word {
+    font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500;
+    letter-spacing: .3px; transition: color .15s;
+  }
+  .axis-ends {
+    display: flex; justify-content: space-between;
+    font-family: 'DM Mono', monospace; font-size: 10px; color: #686868; margin-top: 3px;
+  }
+
+  /* Range sliders */
+  input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 24px; background: transparent;
+    cursor: pointer; outline: none;
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    height: 6px; border-radius: 3px; background: #404040;
+  }
+  input[type=range]::-moz-range-track {
+    height: 6px; border-radius: 3px; background: #404040; border: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; height: 20px; width: 20px;
+    border-radius: 50%; border: none; margin-top: -7px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.5); transition: transform .1s;
+  }
+  input[type=range]::-moz-range-thumb {
+    height: 20px; width: 20px; border-radius: 50%;
+    border: none; box-shadow: 0 1px 6px rgba(0,0,0,.5);
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+  input[type=range]:active::-webkit-slider-thumb { transform: scale(1.4); }
+
+  input[type=range].sl-a::-webkit-slider-thumb { background: #E8764B; }
+  input[type=range].sl-a::-moz-range-thumb { background: #E8764B; }
+  input[type=range].sl-a::-moz-range-progress { background: #E8764B; border-radius: 3px; height: 6px; }
+
+  input[type=range].sl-v::-webkit-slider-thumb { background: #5BA8E8; }
+  input[type=range].sl-v::-moz-range-thumb { background: #5BA8E8; }
+  input[type=range].sl-v::-moz-range-progress { background: #5BA8E8; border-radius: 3px; height: 6px; }
+
+  input[type=range].sl-d::-webkit-slider-thumb { background: #C89BF2; }
+  input[type=range].sl-d::-moz-range-thumb { background: #C89BF2; }
+  input[type=range].sl-d::-moz-range-progress { background: #C89BF2; border-radius: 3px; height: 6px; }
+
+  /* Coordinates */
+  .coords {
+    margin-top: 4px; padding: 14px 18px; background: #1a1a1a;
+    border: 1px solid #2a2a2a; border-radius: 8px;
+    display: flex; justify-content: center; gap: 28px;
+    font-family: 'DM Mono', monospace; font-size: 12px;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <h1>Acoustic Space</h1>
+      <p class="sub" id="subtitle">Three axes · One prompt</p>
+    </div>
+    <div class="lang-group">
+      <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="btn-pt" onclick="setLang('pt')">PT</button>
+    </div>
+  </div>
+
+  <!-- Prompt -->
+  <div style="margin-bottom:28px">
+    <div class="prompt-box" id="prompt-output"></div>
+    <div class="prompt-actions">
+      <button class="btn" id="copy-btn" onclick="handleCopy()">copy</button>
+    </div>
+  </div>
+
+  <!-- Genre -->
+  <div class="genre-section">
+    <span class="section-label" id="genre-label">Genre</span>
+    <button class="genre-trigger" onclick="toggleGenre()">
+      <span id="genre-display"></span>
+      <span class="arrow" id="genre-arrow">▼</span>
+    </button>
+    <div class="genre-drop" id="genre-drop">
+      <input class="genre-input" id="genre-search" placeholder="search..." oninput="filterGenres()">
+      <div id="genre-list"></div>
+    </div>
+  </div>
+
+  <!-- Arousal -->
+  <div class="axis">
+    <div class="axis-head">
+      <span class="axis-name" id="label-a">Arousal</span>
+      <span class="axis-word" id="word-a" style="color:#E8764B"></span>
+    </div>
+    <input type="range" class="sl-a" id="slider-a" min="0" max="100" value="50" oninput="update()">
+    <div class="axis-ends">
+      <span id="low-a">still</span>
+      <span id="high-a">erupting</span>
+    </div>
+  </div>
+
+  <!-- Valence -->
+  <div class="axis">
+    <div class="axis-head">
+      <span class="axis-name" id="label-v">Valence</span>
+      <span class="axis-word" id="word-v" style="color:#5BA8E8"></span>
+    </div>
+    <input type="range" class="sl-v" id="slider-v" min="0" max="100" value="50" oninput="update()">
+    <div class="axis-ends">
+      <span id="low-v">shattered</span>
+      <span id="high-v">transcendent</span>
+    </div>
+  </div>
+
+  <!-- Depth -->
+  <div class="axis">
+    <div class="axis-head">
+      <span class="axis-name" id="label-d">Depth</span>
+      <span class="axis-word" id="word-d" style="color:#C89BF2"></span>
+    </div>
+    <input type="range" class="sl-d" id="slider-d" min="0" max="100" value="50" oninput="update()">
+    <div class="axis-ends">
+      <span id="low-d">bare</span>
+      <span id="high-d">kaleidoscopic</span>
+    </div>
+  </div>
+
+  <!-- Coords -->
+  <div class="coords">
+    <span><span style="color:#E8764B">A</span><span style="color:#555" id="coord-a">:50</span></span>
+    <span><span style="color:#5BA8E8">V</span><span style="color:#555" id="coord-v">:50</span></span>
+    <span><span style="color:#C89BF2">D</span><span style="color:#555" id="coord-d">:50</span></span>
+  </div>
+</div>
+
+<script>
+// ─── Data ───
+const AROUSAL = [
+  [0,"frozen","paralisado"],[3,"dead still","inerte"],[7,"silent","em silêncio"],
+  [10,"hushed","sussurrado"],[13,"muted","abafado"],[17,"quiet","quieto"],
+  [20,"gentle","manso"],[23,"soft","brando"],[27,"calm","tranquilo"],
+  [30,"drifting","vagando"],[33,"floating","planando"],[37,"swaying","embalado"],
+  [40,"rocking","balançado"],[43,"strolling","passeando"],[47,"steady","firme"],
+  [50,"grooving","no embalo"],[53,"rolling","fluindo"],[57,"cruising","navegando"],
+  [60,"pulsing","pulsante"],[63,"driving","intenso"],[67,"pushing","aceso"],
+  [70,"charging","disparado"],[73,"surging","crescente"],[77,"stampeding","galopante"],
+  [80,"thrashing","fervendo"],[83,"storming","tempestuoso"],[87,"raging","enfurecido"],
+  [90,"explosive","explosivo"],[93,"volcanic","vulcânico"],[97,"cataclysmic","avassalador"],
+  [100,"erupting","em erupção"],
+];
+
+const VALENCE = [
+  [0,"shattered","despedaçado"],[3,"devastated","arrasado"],[7,"anguished","aflito"],
+  [10,"somber","soturno"],[13,"grieving","enlutado"],[17,"mournful","pesaroso"],
+  [20,"melancholic","melancólico"],[23,"lonely","solitário"],[27,"wistful","saudoso"],
+  [30,"bittersweet","agridoce"],[33,"yearning","nostálgico"],[37,"pensive","pensativo"],
+  [40,"contemplative","contemplativo"],[43,"reflective","introspectivo"],[47,"neutral","neutro"],
+  [50,"serene","sereno"],[53,"tender","afetuoso"],[57,"gentle","delicado"],
+  [60,"warm","acolhedor"],[63,"hopeful","esperançoso"],[67,"bright","iluminado"],
+  [70,"cheerful","animado"],[73,"uplifting","elevado"],[77,"radiant","radiante"],
+  [80,"beaming","resplandecente"],[83,"joyful","festivo"],[87,"elated","exaltado"],
+  [90,"euphoric","eufórico"],[93,"blissful","extasiado"],[97,"ecstatic","em êxtase"],
+  [100,"transcendent","transcendente"],
+];
+
+const DEPTH = [
+  [0,"bare","pelado"],[3,"hollow","oco"],[7,"skeletal","ossudo"],
+  [10,"stripped","descascado"],[13,"stark","árido"],[17,"raw","cru"],
+  [20,"minimal","enxuto"],[23,"sparse","rarefeito"],[27,"clean","limpo"],
+  [30,"open","aberto"],[33,"airy","arejado"],[37,"spacious","amplo"],
+  [40,"textured","texturizado"],[43,"shaded","sombreado"],[47,"nuanced","sutil"],
+  [50,"detailed","minucioso"],[53,"woven","tramado"],[57,"sculpted","lapidado"],
+  [60,"layered","em camadas"],[63,"rich","farto"],[67,"ornate","rebuscado"],
+  [70,"intricate","intrincado"],[73,"elaborate","elaborado"],[77,"sophisticated","refinado"],
+  [80,"complex","complexo"],[83,"dense","denso"],[87,"immersive","envolvente"],
+  [90,"sprawling","vasto"],[93,"oceanic","oceânico"],[97,"labyrinthine","labiríntico"],
+  [100,"kaleidoscopic","caleidoscópico"],
+];
+
+const GENRES = [
+  ["Acoustic","Música Acústica"],["Ambient","Música Ambiente"],["Axé","Axé"],["Baião","Baião"],
+  ["Blues","Blues"],["Bossa Nova","Bossa Nova"],["Breakbeat","Breakbeat"],
+  ["Brega","Brega"],["Choral","Coral"],["Cinematic","Música Cinematográfica"],
+  ["City Pop","City Pop"],["Classical","Música Clássica"],["Country","Country"],
+  ["Dance","Dance"],["Disco","Disco"],["Downtempo","Downtempo"],
+  ["Drum and Bass","Drum and Bass"],["Dub","Dub"],["Dubstep","Dubstep"],
+  ["Easy Listening","Easy Listening"],["Electronic","Música Eletrônica"],
+  ["Experimental","Música Experimental"],["Folk","Folk"],["Forró","Forró"],
+  ["Frevo","Frevo"],["Funk","Funk"],["Funk Carioca","Funk Carioca"],
+  ["Gospel","Gospel"],["Hip Hop","Hip Hop"],["House","House"],
+  ["Indie Pop","Indie Pop"],["Indie Rock","Indie Rock"],["Industrial","Industrial"],
+  ["Jazz","Jazz"],["K-Pop","K-Pop"],["Lo-fi","Lo-fi"],
+  ["Metal","Metal"],["MPB","MPB"],["Neo Soul","Neo Soul"],["New Age","New Age"],
+  ["Opera","Ópera"],["Pagode","Pagode"],["Phonk","Phonk"],["Pop","Pop"],
+  ["Post-punk","Pós-punk"],["Post-rock","Pós-rock"],["Psychedelic","Música Psicodélica"],
+  ["Punk","Punk"],["R&B","R&B"],["Reggae","Reggae"],["Reggaeton","Reggaeton"],
+  ["Rock","Rock"],["Salsa","Salsa"],["Samba","Samba"],["Sertanejo","Sertanejo"],
+  ["Shoegaze","Shoegaze"],["Singer-songwriter","Singer-songwriter"],["Ska","Ska"],
+  ["Soul","Soul"],["Surf Rock","Surf Rock"],["Synthwave","Synthwave"],
+  ["Techno","Techno"],["Trance","Trance"],["Trap","Trap"],["Trip Hop","Trip Hop"],
+  ["Tropicália","Tropicália"],["Vaporwave","Vaporwave"],["World Music","World Music"],
+];
+
+// ─── State ───
+let lang = "en";
+let genreIdx = GENRES.findIndex(g => g[0] === "Electronic");
+let genreOpen = false;
+
+// ─── Helpers ───
+function getWord(grad, val, ln) {
+  let best = grad[0];
+  for (const e of grad) {
+    if (Math.abs(e[0] - val) < Math.abs(best[0] - val)) best = e;
+  }
+  return ln === "pt" ? best[2] : best[1];
+}
+
+function getGenreName(idx, ln) {
+  return ln === "pt" ? GENRES[idx][1] : GENRES[idx][0];
+}
+
+// ─── Slider fill (WebKit only — Firefox uses ::-moz-range-progress) ───
+function updateSliderFill(slider, color) {
+  const pct = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+  slider.style.background =
+    `linear-gradient(to right, ${color} 0%, ${color} ${pct}%, #404040 ${pct}%, #404040 100%)`;
+}
+
+// ─── Core update ───
+function update() {
+  const a = +document.getElementById("slider-a").value;
+  const v = +document.getElementById("slider-v").value;
+  const d = +document.getElementById("slider-d").value;
+
+  const aW = getWord(AROUSAL, a, lang);
+  const vW = getWord(VALENCE, v, lang);
+  const dW = getWord(DEPTH, d, lang);
+  const gW = getGenreName(genreIdx, lang);
+
+  document.getElementById("word-a").textContent = aW;
+  document.getElementById("word-v").textContent = vW;
+  document.getElementById("word-d").textContent = dW;
+
+  const prompt = lang === "en"
+    ? `Let's go for a ${vW}, ${aW}, ${dW} ${gW} mix.`
+    : `Vamos de um mix ${vW}, ${aW} e ${dW} de ${gW}.`;
+  document.getElementById("prompt-output").textContent = prompt;
+
+  document.getElementById("coord-a").textContent = ":" + a;
+  document.getElementById("coord-v").textContent = ":" + v;
+  document.getElementById("coord-d").textContent = ":" + d;
+
+  document.getElementById("genre-display").textContent = gW;
+
+  updateSliderFill(document.getElementById("slider-a"), "#E8764B");
+  updateSliderFill(document.getElementById("slider-v"), "#5BA8E8");
+  updateSliderFill(document.getElementById("slider-d"), "#C89BF2");
+}
+
+// ─── Language ───
+function setLang(l) {
+  lang = l;
+  document.getElementById("btn-en").className = "lang-btn" + (l === "en" ? " active" : "");
+  document.getElementById("btn-pt").className = "lang-btn" + (l === "pt" ? " active" : "");
+  document.getElementById("subtitle").textContent =
+    l === "en" ? "Three axes · One prompt" : "Três eixos · Um prompt";
+  document.getElementById("copy-btn").textContent =
+    l === "en" ? "copy" : "copiar";
+  document.getElementById("genre-label").textContent =
+    l === "en" ? "Genre" : "Gênero";
+  document.getElementById("genre-search").placeholder =
+    l === "en" ? "search..." : "buscar...";
+
+  document.getElementById("label-a").textContent =
+    l === "en" ? "Arousal" : "Excitação";
+  document.getElementById("label-v").textContent =
+    l === "en" ? "Valence" : "Valência";
+  document.getElementById("label-d").textContent =
+    l === "en" ? "Depth" : "Profundidade";
+
+  document.getElementById("low-a").textContent = l === "en" ? "still" : "parado";
+  document.getElementById("high-a").textContent = l === "en" ? "erupting" : "em erupção";
+  document.getElementById("low-v").textContent = l === "en" ? "shattered" : "despedaçado";
+  document.getElementById("high-v").textContent = l === "en" ? "transcendent" : "transcendente";
+  document.getElementById("low-d").textContent = l === "en" ? "bare" : "pelado";
+  document.getElementById("high-d").textContent = l === "en" ? "kaleidoscopic" : "caleidoscópico";
+
+  renderGenreList();
+  update();
+}
+
+// ─── Genre dropdown ───
+function toggleGenre() {
+  genreOpen = !genreOpen;
+  const drop = document.getElementById("genre-drop");
+  const arrow = document.getElementById("genre-arrow");
+  if (genreOpen) {
+    drop.classList.add("open");
+    arrow.textContent = "▲";
+    document.getElementById("genre-search").value = "";
+    renderGenreList();
+    setTimeout(() => document.getElementById("genre-search").focus(), 50);
+  } else {
+    drop.classList.remove("open");
+    arrow.textContent = "▼";
+  }
+}
+
+function selectGenre(idx) {
+  genreIdx = idx;
+  genreOpen = false;
+  document.getElementById("genre-drop").classList.remove("open");
+  document.getElementById("genre-arrow").textContent = "▼";
+  update();
+}
+
+function filterGenres() {
+  renderGenreList();
+}
+
+function renderGenreList() {
+  const q = document.getElementById("genre-search").value.toLowerCase();
+  const container = document.getElementById("genre-list");
+  container.innerHTML = "";
+  let count = 0;
+  GENRES.forEach((g, i) => {
+    if (q && !g[0].toLowerCase().includes(q) && !g[1].toLowerCase().includes(q)) return;
+    const div = document.createElement("div");
+    div.className = "genre-opt" + (i === genreIdx ? " active" : "");
+    div.textContent = getGenreName(i, lang);
+    div.onclick = () => selectGenre(i);
+    container.appendChild(div);
+    count++;
+  });
+  if (count === 0) {
+    const div = document.createElement("div");
+    div.style.cssText = "padding:16px;color:#555;font-family:'DM Mono',monospace;font-size:12px;text-align:center";
+    div.textContent = "—";
+    container.appendChild(div);
+  }
+}
+
+// ─── Copy ───
+function handleCopy() {
+  const text = document.getElementById("prompt-output").textContent;
+  const btn = document.getElementById("copy-btn");
+  try {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = "✓";
+      btn.classList.add("success");
+      setTimeout(() => {
+        btn.textContent = lang === "en" ? "copy" : "copiar";
+        btn.classList.remove("success");
+      }, 1400);
+    });
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    btn.textContent = "✓";
+    btn.classList.add("success");
+    setTimeout(() => {
+      btn.textContent = lang === "en" ? "copy" : "copiar";
+      btn.classList.remove("success");
+    }, 1400);
+  }
+}
+
+// ─── Close genre on outside click ───
+document.addEventListener("click", (e) => {
+  if (genreOpen && !e.target.closest(".genre-section")) {
+    genreOpen = false;
+    document.getElementById("genre-drop").classList.remove("open");
+    document.getElementById("genre-arrow").textContent = "▼";
+  }
+});
+
+// ─── Init ───
+update();
+</script>
+</body>
+</html>
