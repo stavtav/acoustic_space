@@ -52,21 +52,80 @@
   .btn:hover { border-color: #555; color: #e0e0e0; background: #252525; }
   .btn.success { color: #1DB954; border-color: #1DB954; }
 
+  /* Options */
+  .options-section {
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+  }
+
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .check-row input {
+    accent-color: #1DB954;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  .check-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: #b0b0b0;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+  }
+
   /* Genre */
-  .genre-section { position: relative; margin-bottom: 32px; }
+  .genre-section,
+  .subgenre-section {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .subgenre-section {
+    display: none;
+  }
+
+  .subgenre-section.visible {
+    display: block;
+    animation: fadeUp .15s ease;
+  }
+
   .section-label {
     font-family: 'DM Mono', monospace; font-size: 11px; color: #a0a0a0;
     text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 6px;
   }
-  .genre-trigger {
+
+  .genre-trigger,
+  .select-control {
     cursor: pointer; padding: 12px 18px; background: #1a1a1a;
     border: 1px solid #333; border-radius: 8px;
     display: flex; justify-content: space-between; align-items: center;
     width: 100%; color: #e0e0e0; font-family: 'DM Mono', monospace; font-size: 14px;
     transition: all .15s;
   }
-  .genre-trigger:hover { border-color: #555; }
+
+  .genre-trigger:hover,
+  .select-control:hover {
+    border-color: #555;
+  }
+
   .genre-trigger .arrow { color: #686868; font-size: 10px; }
+
+  .select-control {
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+  }
 
   .genre-drop {
     position: absolute; left: 0; right: 0; top: calc(100% + 4px);
@@ -119,7 +178,7 @@
     cursor: pointer; outline: none;
   }
   input[type=range]::-webkit-slider-runnable-track {
-    height: 6px; border-radius: 3px; background: #404040;
+    height: 6px; border-radius: 3px; background: transparent;
   }
   input[type=range]::-moz-range-track {
     height: 6px; border-radius: 3px; background: #404040; border: none;
@@ -185,8 +244,16 @@
     </div>
   </div>
 
+  <!-- Genre Toggle -->
+  <div class="options-section">
+    <label class="check-row">
+      <input type="checkbox" id="use-genre" checked onchange="toggleUseGenre()">
+      <span class="check-label" id="use-genre-label">Use genre</span>
+    </label>
+  </div>
+
   <!-- Genre -->
-  <div class="genre-section">
+  <div class="genre-section" id="genre-section">
     <span class="section-label" id="genre-label">Genre</span>
     <button class="genre-trigger" onclick="toggleGenre()">
       <span id="genre-display"></span>
@@ -198,16 +265,22 @@
     </div>
   </div>
 
+  <!-- Subgenre -->
+  <div class="subgenre-section visible" id="subgenre-section">
+    <span class="section-label" id="subgenre-label">Subgenre</span>
+    <select class="select-control" id="subgenre-select" onchange="update()"></select>
+  </div>
+
   <!-- Arousal -->
   <div class="axis">
     <div class="axis-head">
       <span class="axis-name" id="label-a">Arousal</span>
       <span class="axis-word" id="word-a" style="color:#E8764B"></span>
     </div>
-    <input type="range" class="sl-a" id="slider-a" min="0" max="100" value="50" oninput="update()">
+    <input type="range" class="sl-a" id="slider-a" min="0" max="6" step="1" value="3" oninput="update()">
     <div class="axis-ends">
-      <span id="low-a">still</span>
-      <span id="high-a">erupting</span>
+      <span id="low-a">slow</span>
+      <span id="high-a">intense</span>
     </div>
   </div>
 
@@ -217,10 +290,10 @@
       <span class="axis-name" id="label-v">Valence</span>
       <span class="axis-word" id="word-v" style="color:#5BA8E8"></span>
     </div>
-    <input type="range" class="sl-v" id="slider-v" min="0" max="100" value="50" oninput="update()">
+    <input type="range" class="sl-v" id="slider-v" min="0" max="6" step="1" value="3" oninput="update()">
     <div class="axis-ends">
-      <span id="low-v">shattered</span>
-      <span id="high-v">transcendent</span>
+      <span id="low-v">sad</span>
+      <span id="high-v">euphoric</span>
     </div>
   </div>
 
@@ -230,112 +303,576 @@
       <span class="axis-name" id="label-d">Depth</span>
       <span class="axis-word" id="word-d" style="color:#C89BF2"></span>
     </div>
-    <input type="range" class="sl-d" id="slider-d" min="0" max="100" value="50" oninput="update()">
+    <input type="range" class="sl-d" id="slider-d" min="0" max="6" step="1" value="3" oninput="update()">
     <div class="axis-ends">
-      <span id="low-d">bare</span>
-      <span id="high-d">kaleidoscopic</span>
+      <span id="low-d">simple</span>
+      <span id="high-d">complex</span>
     </div>
   </div>
 
   <!-- Coords -->
   <div class="coords">
-    <span><span style="color:#E8764B">A</span><span style="color:#555" id="coord-a">:50</span></span>
-    <span><span style="color:#5BA8E8">V</span><span style="color:#555" id="coord-v">:50</span></span>
-    <span><span style="color:#C89BF2">D</span><span style="color:#555" id="coord-d">:50</span></span>
+    <span><span style="color:#E8764B">A</span><span style="color:#555" id="coord-a">:4/7</span></span>
+    <span><span style="color:#5BA8E8">V</span><span style="color:#555" id="coord-v">:4/7</span></span>
+    <span><span style="color:#C89BF2">D</span><span style="color:#555" id="coord-d">:4/7</span></span>
   </div>
 </div>
 
 <script>
 // ─── Data ───
+// Each axis has exactly 7 discrete options.
+// EN and PT-BR are native prompt words, not literal translations.
+// Avoid repeating the same adjective across different axes.
+
 const AROUSAL = [
-  [0,"frozen","paralisado"],[3,"dead still","inerte"],[7,"silent","em silêncio"],
-  [10,"hushed","sussurrado"],[13,"muted","abafado"],[17,"quiet","quieto"],
-  [20,"gentle","manso"],[23,"soft","brando"],[27,"calm","tranquilo"],
-  [30,"drifting","vagando"],[33,"floating","planando"],[37,"swaying","embalado"],
-  [40,"rocking","balançado"],[43,"strolling","passeando"],[47,"steady","firme"],
-  [50,"grooving","no embalo"],[53,"rolling","fluindo"],[57,"cruising","navegando"],
-  [60,"pulsing","pulsante"],[63,"driving","intenso"],[67,"pushing","aceso"],
-  [70,"charging","disparado"],[73,"surging","crescente"],[77,"stampeding","galopante"],
-  [80,"thrashing","fervendo"],[83,"storming","tempestuoso"],[87,"raging","enfurecido"],
-  [90,"explosive","explosivo"],[93,"volcanic","vulcânico"],[97,"cataclysmic","avassalador"],
-  [100,"erupting","em erupção"],
+  ["slow", "lento"],
+  ["quiet", "quieto"],
+  ["gentle", "suave"],
+  ["rhythmic", "ritmado"],
+  ["lively", "vibrante"],
+  ["energetic", "energético"],
+  ["intense", "intenso"],
 ];
 
 const VALENCE = [
-  [0,"shattered","despedaçado"],[3,"devastated","arrasado"],[7,"anguished","aflito"],
-  [10,"somber","soturno"],[13,"grieving","enlutado"],[17,"mournful","pesaroso"],
-  [20,"melancholic","melancólico"],[23,"lonely","solitário"],[27,"wistful","saudoso"],
-  [30,"bittersweet","agridoce"],[33,"yearning","nostálgico"],[37,"pensive","pensativo"],
-  [40,"contemplative","contemplativo"],[43,"reflective","introspectivo"],[47,"neutral","neutro"],
-  [50,"serene","sereno"],[53,"tender","afetuoso"],[57,"gentle","delicado"],
-  [60,"warm","acolhedor"],[63,"hopeful","esperançoso"],[67,"bright","iluminado"],
-  [70,"cheerful","animado"],[73,"uplifting","elevado"],[77,"radiant","radiante"],
-  [80,"beaming","resplandecente"],[83,"joyful","festivo"],[87,"elated","exaltado"],
-  [90,"euphoric","eufórico"],[93,"blissful","extasiado"],[97,"ecstatic","em êxtase"],
-  [100,"transcendent","transcendente"],
+  ["sad", "triste"],
+  ["dark", "sombrio"],
+  ["melancholic", "melancólico"],
+  ["neutral", "neutro"],
+  ["warm", "acolhedor"],
+  ["happy", "alegre"],
+  ["euphoric", "eufórico"],
 ];
 
 const DEPTH = [
-  [0,"bare","pelado"],[3,"hollow","oco"],[7,"skeletal","ossudo"],
-  [10,"stripped","descascado"],[13,"stark","árido"],[17,"raw","cru"],
-  [20,"minimal","enxuto"],[23,"sparse","rarefeito"],[27,"clean","limpo"],
-  [30,"open","aberto"],[33,"airy","arejado"],[37,"spacious","amplo"],
-  [40,"textured","texturizado"],[43,"shaded","sombreado"],[47,"nuanced","sutil"],
-  [50,"detailed","minucioso"],[53,"woven","tramado"],[57,"sculpted","lapidado"],
-  [60,"layered","em camadas"],[63,"rich","farto"],[67,"ornate","rebuscado"],
-  [70,"intricate","intrincado"],[73,"elaborate","elaborado"],[77,"sophisticated","refinado"],
-  [80,"complex","complexo"],[83,"dense","denso"],[87,"immersive","envolvente"],
-  [90,"sprawling","vasto"],[93,"oceanic","oceânico"],[97,"labyrinthine","labiríntico"],
-  [100,"kaleidoscopic","caleidoscópico"],
+  ["simple", "simples"],
+  ["minimal", "minimalista"],
+  ["clean", "limpo"],
+  ["spacious", "espaçoso"],
+  ["textured", "texturizado"],
+  ["layered", "em camadas"],
+  ["complex", "complexo"],
 ];
 
+// Main categories are intentionally broad.
+// More specific styles are handled through SUBGENRES.
 const GENRES = [
-  ["Acoustic","Música Acústica"],["Ambient","Música Ambiente"],["Axé","Axé"],["Baião","Baião"],
-  ["Blues","Blues"],["Bossa Nova","Bossa Nova"],["Breakbeat","Breakbeat"],
-  ["Brega","Brega"],["Choral","Coral"],["Cinematic","Música Cinematográfica"],
-  ["City Pop","City Pop"],["Classical","Música Clássica"],["Country","Country"],
-  ["Dance","Dance"],["Disco","Disco"],["Downtempo","Downtempo"],
-  ["Drum and Bass","Drum and Bass"],["Dub","Dub"],["Dubstep","Dubstep"],
-  ["Easy Listening","Easy Listening"],["Electronic","Música Eletrônica"],
-  ["Experimental","Música Experimental"],["Folk","Folk"],["Forró","Forró"],
-  ["Frevo","Frevo"],["Funk","Funk"],["Funk Carioca","Funk Carioca"],
-  ["Gospel","Gospel"],["Hip Hop","Hip Hop"],["House","House"],
-  ["Indie Pop","Indie Pop"],["Indie Rock","Indie Rock"],["Industrial","Industrial"],
-  ["Jazz","Jazz"],["K-Pop","K-Pop"],["Lo-fi","Lo-fi"],
-  ["Metal","Metal"],["MPB","MPB"],["Neo Soul","Neo Soul"],["New Age","New Age"],
-  ["Opera","Ópera"],["Pagode","Pagode"],["Phonk","Phonk"],["Pop","Pop"],
-  ["Post-punk","Pós-punk"],["Post-rock","Pós-rock"],["Psychedelic","Música Psicodélica"],
-  ["Punk","Punk"],["R&B","R&B"],["Reggae","Reggae"],["Reggaeton","Reggaeton"],
-  ["Rock","Rock"],["Salsa","Salsa"],["Samba","Samba"],["Sertanejo","Sertanejo"],
-  ["Shoegaze","Shoegaze"],["Singer-songwriter","Singer-songwriter"],["Ska","Ska"],
-  ["Soul","Soul"],["Surf Rock","Surf Rock"],["Synthwave","Synthwave"],
-  ["Techno","Techno"],["Trance","Trance"],["Trap","Trap"],["Trip Hop","Trip Hop"],
-  ["Tropicália","Tropicália"],["Vaporwave","Vaporwave"],["World Music","World Music"],
+  ["Acoustic", "Música Acústica"],
+  ["Ambient", "Música Ambiente"],
+  ["Blues", "Blues"],
+  ["Breakbeat", "Breakbeat"],
+  ["Brazilian", "Música Brasileira"],
+  ["Cinematic", "Música Cinematográfica"],
+  ["Classical", "Música Clássica"],
+  ["Country", "Country"],
+  ["Dance", "Dance"],
+  ["Downtempo", "Downtempo"],
+  ["Electronic", "Música Eletrônica"],
+  ["Experimental", "Música Experimental"],
+  ["Folk", "Folk"],
+  ["Funk", "Funk"],
+  ["Gospel", "Gospel"],
+  ["Hip Hop", "Hip Hop"],
+  ["House", "House"],
+  ["Jazz", "Jazz"],
+  ["Latin", "Música Latina"],
+  ["Lo-fi", "Lo-fi"],
+  ["Metal", "Metal"],
+  ["Opera", "Ópera"],
+  ["Phonk", "Phonk"],
+  ["Pop", "Pop"],
+  ["Psychedelic", "Música Psicodélica"],
+  ["Punk", "Punk"],
+  ["R&B", "R&B"],
+  ["Reggae", "Reggae"],
+  ["Rock", "Rock"],
+  ["Singer-songwriter", "Singer-songwriter"],
+  ["Soul", "Soul"],
+  ["Techno", "Techno"],
+  ["Trance", "Trance"],
+  ["Trap", "Trap"],
+  ["World Music", "World Music"],
 ];
+
+const SUBGENRES = {
+  "Acoustic": [
+    ["Solo Guitar", "Violão Solo"],
+    ["Solo Piano", "Piano Solo"],
+    ["Acoustic Rock", "Rock Acústico"],
+    ["Slack-key Guitar", "Slack-key Guitar"],
+  ],
+
+  "Ambient": [
+    ["Dark Ambient", "Dark Ambient"],
+    ["Drone", "Drone"],
+    ["Meditation", "Meditação"],
+    ["Space Ambient", "Space Ambient"],
+    ["Ambient Dub", "Ambient Dub"],
+    ["Ambient Pop", "Ambient Pop"],
+    ["Ambient House", "Ambient House"],
+    ["Nature Sounds", "Sons da Natureza"],
+    ["Binaural Beats", "Binaural Beats"],
+  ],
+
+  "Blues": [
+    ["Acoustic Blues", "Blues Acústico"],
+    ["Classic Blues", "Blues Clássico"],
+    ["Country Blues", "Country Blues"],
+    ["Delta Blues", "Delta Blues"],
+    ["Modern Blues", "Blues Moderno"],
+    ["Blues Rock", "Blues Rock"],
+    ["Soul Blues", "Soul Blues"],
+  ],
+
+  "Breakbeat": [
+    ["2-step", "2-step"],
+    ["Big Beat", "Big Beat"],
+    ["Future Garage", "Future Garage"],
+    ["Jungle", "Jungle"],
+    ["UK Garage", "UK Garage"],
+    ["Progressive Breaks", "Progressive Breaks"],
+  ],
+
+  "Brazilian": [
+    ["Axé", "Axé"],
+    ["Baião", "Baião"],
+    ["Batucada", "Batucada"],
+    ["Bossa Nova", "Bossa Nova"],
+    ["Forró", "Forró"],
+    ["Frevo", "Frevo"],
+    ["Funk Carioca", "Funk Carioca"],
+    ["MPB", "MPB"],
+    ["Pagode", "Pagode"],
+    ["Samba", "Samba"],
+    ["Sambass", "Sambass"],
+    ["Sertanejo", "Sertanejo"],
+    ["Tropicália", "Tropicália"],
+  ],
+
+  "Cinematic": [
+    ["Action", "Ação"],
+    ["Adventure", "Aventura"],
+    ["Drama", "Drama"],
+    ["Horror", "Terror"],
+    ["Mystery", "Mistério"],
+    ["Suspense", "Suspense"],
+    ["Supernatural", "Sobrenatural"],
+    ["Tragedy", "Tragédia"],
+    ["Main Title", "Tema Principal"],
+    ["Orchestral Hybrid", "Orquestral Híbrido"],
+  ],
+
+  "Classical": [
+    ["Baroque", "Barroco"],
+    ["Classical Period", "Período Clássico"],
+    ["Romantic Classical", "Clássico Romântico"],
+    ["Contemporary Classical", "Clássico Contemporâneo"],
+    ["Modern Classical", "Clássico Moderno"],
+    ["Post-classical", "Pós-clássico"],
+    ["Orchestral", "Orquestral"],
+    ["Small Ensemble", "Pequeno Conjunto"],
+    ["String Ensemble", "Conjunto de Cordas"],
+    ["Solo Instrumental", "Solo Instrumental"],
+    ["Choral", "Coral"],
+    ["Waltz", "Valsa"],
+  ],
+
+  "Country": [
+    ["Americana", "Americana"],
+    ["Bluegrass", "Bluegrass"],
+    ["Contemporary Country", "Country Contemporâneo"],
+    ["Country Folk", "Country Folk"],
+    ["Country Pop", "Country Pop"],
+    ["Country Rock", "Country Rock"],
+    ["Traditional Country", "Country Tradicional"],
+    ["Western", "Western"],
+  ],
+
+  "Dance": [
+    ["Dance-pop", "Dance-pop"],
+    ["Disco", "Disco"],
+    ["Boogie", "Boogie"],
+    ["Nu Disco", "Nu Disco"],
+    ["Eurodance", "Eurodance"],
+    ["Euro House", "Euro House"],
+    ["Hands Up", "Hands Up"],
+  ],
+
+  "Downtempo": [
+    ["Balearic Beat", "Balearic Beat"],
+    ["Chillout", "Chillout"],
+    ["Chillstep", "Chillstep"],
+    ["Chillwave", "Chillwave"],
+    ["Trip Hop", "Trip Hop"],
+    ["Lounge", "Lounge"],
+  ],
+
+  "Electronic": [
+    ["Bit Music", "Bit Music"],
+    ["Dark Wave", "Dark Wave"],
+    ["EDM", "EDM"],
+    ["Electro", "Electro"],
+    ["Electro Swing", "Electro Swing"],
+    ["Electro-funk", "Electro-funk"],
+    ["Electroacoustic", "Eletroacústica"],
+    ["Electronica", "Electronica"],
+    ["Footwork", "Footwork"],
+    ["Future Bass", "Future Bass"],
+    ["Hardstyle", "Hardstyle"],
+    ["IDM", "IDM"],
+    ["Indietronica", "Indietronica"],
+    ["Jersey Club", "Jersey Club"],
+    ["Midtempo Bass", "Midtempo Bass"],
+    ["Synthwave", "Synthwave"],
+    ["Vaporwave", "Vaporwave"],
+  ],
+
+  "Experimental": [
+    ["Experimental Electronic", "Eletrônica Experimental"],
+    ["Experimental Hip Hop", "Hip Hop Experimental"],
+    ["Electroacoustic", "Eletroacústica"],
+    ["Ambient Noise Wall", "Ambient Noise Wall"],
+    ["Noise", "Noise"],
+  ],
+
+  "Folk": [
+    ["Alternative Folk", "Folk Alternativo"],
+    ["Celtic", "Celta"],
+    ["Contemporary Folk", "Folk Contemporâneo"],
+    ["Folk Pop", "Folk Pop"],
+    ["Indie Folk", "Indie Folk"],
+    ["Irish Folk", "Folk Irlandês"],
+    ["Klezmer", "Klezmer"],
+    ["Polka", "Polka"],
+    ["Folktronica", "Folktronica"],
+  ],
+
+  "Funk": [
+    ["Afro-funk", "Afro-funk"],
+    ["Funk Rock", "Funk Rock"],
+    ["Synth Funk", "Synth Funk"],
+    ["Jazz-funk", "Jazz-funk"],
+    ["Electro-funk", "Electro-funk"],
+  ],
+
+  "Gospel": [
+    ["Contemporary Gospel", "Gospel Contemporâneo"],
+    ["Praise & Worship", "Praise & Worship"],
+    ["Modern Hymns", "Hinos Modernos"],
+    ["Contemporary Christian", "Cristão Contemporâneo"],
+  ],
+
+  "Hip Hop": [
+    ["Abstract Hip Hop", "Hip Hop Abstrato"],
+    ["Alternative Hip Hop", "Hip Hop Alternativo"],
+    ["Boom Bap", "Boom Bap"],
+    ["Conscious Hip Hop", "Conscious Hip Hop"],
+    ["Drill", "Drill"],
+    ["East Coast Hip Hop", "East Coast Hip Hop"],
+    ["Experimental Hip Hop", "Hip Hop Experimental"],
+    ["Grime", "Grime"],
+    ["Hardcore Hip Hop", "Hardcore Hip Hop"],
+    ["Lo-fi Hip Hop", "Lo-fi Hip Hop"],
+    ["Old School Hip Hop", "Old School Hip Hop"],
+    ["Southern Hip Hop", "Southern Hip Hop"],
+    ["UK Hip Hop", "UK Hip Hop"],
+    ["West Coast Hip Hop", "West Coast Hip Hop"],
+  ],
+
+  "House": [
+    ["Afro House", "Afro House"],
+    ["Amapiano", "Amapiano"],
+    ["Bass House", "Bass House"],
+    ["Big Room House", "Big Room House"],
+    ["Deep House", "Deep House"],
+    ["Electro House", "Electro House"],
+    ["Funky House", "Funky House"],
+    ["Future House", "Future House"],
+    ["Garage House", "Garage House"],
+    ["Hip House", "Hip House"],
+    ["Lo-fi House", "Lo-fi House"],
+    ["Microhouse", "Microhouse"],
+    ["Organic House", "Organic House"],
+    ["Progressive House", "Progressive House"],
+    ["Slap House", "Slap House"],
+    ["Soft House", "Soft House"],
+    ["Tech House", "Tech House"],
+    ["Tribal House", "Tribal House"],
+    ["Tropical House", "Tropical House"],
+  ],
+
+  "Jazz": [
+    ["Acid Jazz", "Acid Jazz"],
+    ["Bebop", "Bebop"],
+    ["Big Band", "Big Band"],
+    ["Classic Jazz", "Jazz Clássico"],
+    ["Contemporary Jazz", "Jazz Contemporâneo"],
+    ["Cool Jazz", "Cool Jazz"],
+    ["Dark Jazz", "Dark Jazz"],
+    ["Dixieland", "Dixieland"],
+    ["Jazz Fusion", "Jazz Fusion"],
+    ["Jazz Blues", "Jazz Blues"],
+    ["Jazz Pop", "Jazz Pop"],
+    ["Latin Jazz", "Latin Jazz"],
+    ["Nu Jazz", "Nu Jazz"],
+    ["Ragtime", "Ragtime"],
+    ["Smooth Jazz", "Smooth Jazz"],
+    ["Soul Jazz", "Soul Jazz"],
+    ["Swing", "Swing"],
+  ],
+
+  "Latin": [
+    ["Bachata", "Bachata"],
+    ["Bolero", "Bolero"],
+    ["Calypso", "Calypso"],
+    ["Chachachá", "Chachachá"],
+    ["Corrido", "Corrido"],
+    ["Corrido Tumbado", "Corrido Tumbado"],
+    ["Cumbia", "Cumbia"],
+    ["Cumbia Mexicana", "Cumbia Mexicana"],
+    ["Cumbia Norteña Mexicana", "Cumbia Norteña Mexicana"],
+    ["Cumbia Pop", "Cumbia Pop"],
+    ["Dembow", "Dembow"],
+    ["Flamenco", "Flamenco"],
+    ["Latin Ballad", "Balada Latina"],
+    ["Latin House", "Latin House"],
+    ["Latin Pop", "Pop Latino"],
+    ["Latin Rock", "Rock Latino"],
+    ["Mambo", "Mambo"],
+    ["Mariachi", "Mariachi"],
+    ["Merengue", "Merengue"],
+    ["Ranchera", "Ranchera"],
+    ["Reggaeton", "Reggaeton"],
+    ["Rumba", "Rumba"],
+    ["Salsa", "Salsa"],
+    ["Son Cubano", "Son Cubano"],
+    ["Tango", "Tango"],
+  ],
+
+  "Lo-fi": [
+    ["Lo-fi Hip Hop", "Lo-fi Hip Hop"],
+    ["Lo-fi House", "Lo-fi House"],
+    ["Chillhop", "Chillhop"],
+    ["Bedroom Pop", "Bedroom Pop"],
+  ],
+
+  "Metal": [
+    ["Black Metal", "Black Metal"],
+    ["Heavy Metal", "Heavy Metal"],
+    ["Industrial Metal", "Industrial Metal"],
+    ["Metalcore", "Metalcore"],
+    ["Nu Metal", "Nu Metal"],
+    ["Thrash Metal", "Thrash Metal"],
+    ["Trap Metal", "Trap Metal"],
+  ],
+
+  "Opera": [
+    ["Classical Opera", "Ópera Clássica"],
+    ["Choral Opera", "Ópera Coral"],
+    ["Requiem", "Réquiem"],
+  ],
+
+  "Phonk": [
+    ["Drift Phonk", "Drift Phonk"],
+    ["Hard Phonk", "Hard Phonk"],
+    ["Brazilian Phonk", "Brazilian Phonk"],
+  ],
+
+  "Pop": [
+    ["Alternative Pop", "Pop Alternativo"],
+    ["Bedroom Pop", "Bedroom Pop"],
+    ["Bubblegum Pop", "Bubblegum Pop"],
+    ["Dance-pop", "Dance-pop"],
+    ["Dream Pop", "Dream Pop"],
+    ["Electropop", "Electropop"],
+    ["Europop", "Europop"],
+    ["Hyperpop", "Hyperpop"],
+    ["Indie Pop", "Indie Pop"],
+    ["J-pop", "J-pop"],
+    ["K-pop", "K-pop"],
+    ["Pop Rock", "Pop Rock"],
+    ["Pop Soul", "Pop Soul"],
+    ["Schlager", "Schlager"],
+    ["Sunshine Pop", "Sunshine Pop"],
+    ["Synth-pop", "Synth-pop"],
+    ["Teen Pop", "Teen Pop"],
+  ],
+
+  "Psychedelic": [
+    ["Neo-psychedelia", "Neo-psicodelia"],
+    ["Psychedelic Pop", "Pop Psicodélico"],
+    ["Psychedelic Rock", "Rock Psicodélico"],
+    ["Psychedelic Soul", "Soul Psicodélico"],
+  ],
+
+  "Punk": [
+    ["Hardcore Punk", "Hardcore Punk"],
+    ["Pop Punk", "Pop Punk"],
+    ["Post-punk", "Pós-punk"],
+    ["Post-punk Revival", "Post-punk Revival"],
+    ["Punk Rock", "Punk Rock"],
+    ["Screamo", "Screamo"],
+  ],
+
+  "R&B": [
+    ["Contemporary R&B", "R&B Contemporâneo"],
+    ["Hip Hop Soul", "Hip Hop Soul"],
+    ["Motown", "Motown"],
+    ["Smooth Soul", "Smooth Soul"],
+    ["Pop Soul", "Pop Soul"],
+  ],
+
+  "Reggae": [
+    ["Dancehall", "Dancehall"],
+    ["Dub", "Dub"],
+    ["Reggae Fusion", "Reggae Fusion"],
+    ["Ska", "Ska"],
+    ["Rocksteady", "Rocksteady"],
+  ],
+
+  "Rock": [
+    ["Alternative Rock", "Rock Alternativo"],
+    ["Arena Rock", "Arena Rock"],
+    ["Classic Rock", "Rock Clássico"],
+    ["Electronic Rock", "Rock Eletrônico"],
+    ["Folk Rock", "Folk Rock"],
+    ["Garage Rock", "Garage Rock"],
+    ["Grunge", "Grunge"],
+    ["Hard Rock", "Hard Rock"],
+    ["Indie Rock", "Indie Rock"],
+    ["Post-rock", "Pós-rock"],
+    ["Psychedelic Rock", "Rock Psicodélico"],
+    ["Rock And Roll", "Rock And Roll"],
+    ["Rockabilly", "Rockabilly"],
+    ["Roots Rock", "Roots Rock"],
+    ["Soft Rock", "Soft Rock"],
+    ["Southern Rock", "Southern Rock"],
+    ["Stoner Rock", "Stoner Rock"],
+    ["Surf Rock", "Surf Rock"],
+  ],
+
+  "Singer-songwriter": [
+    ["Acoustic Singer-songwriter", "Singer-songwriter Acústico"],
+    ["Folk Singer-songwriter", "Singer-songwriter Folk"],
+    ["Indie Singer-songwriter", "Singer-songwriter Indie"],
+  ],
+
+  "Soul": [
+    ["Classic Soul", "Soul Clássico"],
+    ["Gospel", "Gospel"],
+    ["Neo Soul", "Neo Soul"],
+    ["Psychedelic Soul", "Soul Psicodélico"],
+    ["Smooth Soul", "Smooth Soul"],
+    ["Soul Blues", "Soul Blues"],
+    ["Soul Jazz", "Soul Jazz"],
+  ],
+
+  "Techno": [
+    ["Melodic Techno", "Melodic Techno"],
+    ["Minimal Techno", "Minimal Techno"],
+    ["Peak Time Techno", "Peak Time Techno"],
+    ["Tech House", "Tech House"],
+    ["Techno Bass", "Techno Bass"],
+  ],
+
+  "Trance": [
+    ["Euro-trance", "Euro-trance"],
+    ["Psytrance", "Psytrance"],
+    ["Vocal Trance", "Vocal Trance"],
+  ],
+
+  "Trap": [
+    ["Detroit Trap", "Detroit Trap"],
+    ["Hard Trap", "Hard Trap"],
+    ["Hybrid Trap", "Hybrid Trap"],
+    ["Trap EDM", "Trap EDM"],
+    ["Trap Metal", "Trap Metal"],
+    ["UK Drill", "UK Drill"],
+  ],
+
+  "World Music": [
+    ["African", "Africana"],
+    ["Asian", "Asiática"],
+    ["Caribbean", "Caribenha"],
+    ["Celtic", "Celta"],
+    ["Indian Classical", "Clássica Indiana"],
+    ["Japanese Classical", "Clássica Japonesa"],
+    ["Korean Classical", "Clássica Coreana"],
+    ["Mediterranean", "Mediterrânea"],
+    ["Middle Eastern", "Oriente Médio"],
+    ["World Fusion", "World Fusion"],
+  ],
+};
 
 // ─── State ───
 let lang = "en";
 let genreIdx = GENRES.findIndex(g => g[0] === "Electronic");
 let genreOpen = false;
+let useGenre = true;
 
 // ─── Helpers ───
-function getWord(grad, val, ln) {
-  let best = grad[0];
-  for (const e of grad) {
-    if (Math.abs(e[0] - val) < Math.abs(best[0] - val)) best = e;
-  }
-  return ln === "pt" ? best[2] : best[1];
+function getAxisWord(axis, idx, ln) {
+  return ln === "pt" ? axis[idx][1] : axis[idx][0];
+}
+
+function getGenreKey(idx) {
+  return GENRES[idx][0];
 }
 
 function getGenreName(idx, ln) {
   return ln === "pt" ? GENRES[idx][1] : GENRES[idx][0];
 }
 
-// ─── Slider fill (WebKit only — Firefox uses ::-moz-range-progress) ───
+function getSubgenreName(subgenre, ln) {
+  return ln === "pt" ? subgenre[1] : subgenre[0];
+}
+
+function getAxisEnd(axis, end, ln) {
+  const idx = end === "low" ? 0 : axis.length - 1;
+  return getAxisWord(axis, idx, ln);
+}
+
+function getSelectedSubgenre() {
+  const select = document.getElementById("subgenre-select");
+  if (!select || select.value === "") return null;
+
+  const genreKey = getGenreKey(genreIdx);
+  const subgenres = SUBGENRES[genreKey] || [];
+  return subgenres.find(s => s[0] === select.value) || null;
+}
+
+function getStyleName(ln) {
+  const selectedSubgenre = getSelectedSubgenre();
+
+  if (selectedSubgenre) {
+    return getSubgenreName(selectedSubgenre, ln);
+  }
+
+  return getGenreName(genreIdx, ln);
+}
+
+// ─── Slider fill ───
 function updateSliderFill(slider, color) {
   const pct = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
   slider.style.background =
     `linear-gradient(to right, ${color} 0%, ${color} ${pct}%, #404040 ${pct}%, #404040 100%)`;
+}
+
+// ─── Prompt ───
+function buildPrompt({ valence, arousal, depth, style, ln, includeGenre }) {
+  if (ln === "pt") {
+    if (!includeGenre) {
+      return `Vamos de um mix com clima ${valence}, energia ${arousal} e produção ${depth}.`;
+    }
+
+    return `Vamos de um mix de ${style} com clima ${valence}, energia ${arousal} e produção ${depth}.`;
+  }
+
+  if (!includeGenre) {
+    return `Let's go for a mix that feels ${valence}, sounds ${arousal}, and has ${depth} production.`;
+  }
+
+  return `Let's go for a ${style} mix that feels ${valence}, sounds ${arousal}, and has ${depth} production.`;
 }
 
 // ─── Core update ───
@@ -344,68 +881,114 @@ function update() {
   const v = +document.getElementById("slider-v").value;
   const d = +document.getElementById("slider-d").value;
 
-  const aW = getWord(AROUSAL, a, lang);
-  const vW = getWord(VALENCE, v, lang);
-  const dW = getWord(DEPTH, d, lang);
-  const gW = getGenreName(genreIdx, lang);
+  const aW = getAxisWord(AROUSAL, a, lang);
+  const vW = getAxisWord(VALENCE, v, lang);
+  const dW = getAxisWord(DEPTH, d, lang);
+  const styleW = getStyleName(lang);
 
   document.getElementById("word-a").textContent = aW;
   document.getElementById("word-v").textContent = vW;
   document.getElementById("word-d").textContent = dW;
 
-  const prompt = lang === "en"
-    ? `Let's go for a ${vW}, ${aW}, ${dW} ${gW} mix.`
-    : `Vamos de um mix ${vW}, ${aW} e ${dW} de ${gW}.`;
+  const prompt = buildPrompt({
+    valence: vW,
+    arousal: aW,
+    depth: dW,
+    style: styleW,
+    ln: lang,
+    includeGenre: useGenre,
+  });
+
   document.getElementById("prompt-output").textContent = prompt;
 
-  document.getElementById("coord-a").textContent = ":" + a;
-  document.getElementById("coord-v").textContent = ":" + v;
-  document.getElementById("coord-d").textContent = ":" + d;
+  document.getElementById("coord-a").textContent = ":" + (a + 1) + "/7";
+  document.getElementById("coord-v").textContent = ":" + (v + 1) + "/7";
+  document.getElementById("coord-d").textContent = ":" + (d + 1) + "/7";
 
-  document.getElementById("genre-display").textContent = gW;
+  document.getElementById("genre-display").textContent = getGenreName(genreIdx, lang);
 
   updateSliderFill(document.getElementById("slider-a"), "#E8764B");
   updateSliderFill(document.getElementById("slider-v"), "#5BA8E8");
   updateSliderFill(document.getElementById("slider-d"), "#C89BF2");
 }
 
+// ─── Use genre toggle ───
+function toggleUseGenre() {
+  useGenre = document.getElementById("use-genre").checked;
+
+  const genreSection = document.getElementById("genre-section");
+  const subgenreSection = document.getElementById("subgenre-section");
+
+  genreSection.style.display = useGenre ? "block" : "none";
+  subgenreSection.className = useGenre ? "subgenre-section visible" : "subgenre-section";
+
+  if (!useGenre && genreOpen) {
+    genreOpen = false;
+    document.getElementById("genre-drop").classList.remove("open");
+    document.getElementById("genre-arrow").textContent = "▼";
+  }
+
+  update();
+}
+
 // ─── Language ───
 function setLang(l) {
   lang = l;
+
+  document.documentElement.lang = l === "pt" ? "pt-BR" : "en";
+
   document.getElementById("btn-en").className = "lang-btn" + (l === "en" ? " active" : "");
   document.getElementById("btn-pt").className = "lang-btn" + (l === "pt" ? " active" : "");
+
   document.getElementById("subtitle").textContent =
     l === "en" ? "Three axes · One prompt" : "Três eixos · Um prompt";
+
   document.getElementById("copy-btn").textContent =
     l === "en" ? "copy" : "copiar";
+
+  document.getElementById("use-genre-label").textContent =
+    l === "en" ? "Use genre" : "Usar gênero";
+
   document.getElementById("genre-label").textContent =
     l === "en" ? "Genre" : "Gênero";
+
+  document.getElementById("subgenre-label").textContent =
+    l === "en" ? "Subgenre" : "Subgênero";
+
   document.getElementById("genre-search").placeholder =
     l === "en" ? "search..." : "buscar...";
 
   document.getElementById("label-a").textContent =
     l === "en" ? "Arousal" : "Excitação";
+
   document.getElementById("label-v").textContent =
     l === "en" ? "Valence" : "Valência";
+
   document.getElementById("label-d").textContent =
     l === "en" ? "Depth" : "Profundidade";
 
-  document.getElementById("low-a").textContent = l === "en" ? "still" : "parado";
-  document.getElementById("high-a").textContent = l === "en" ? "erupting" : "em erupção";
-  document.getElementById("low-v").textContent = l === "en" ? "shattered" : "despedaçado";
-  document.getElementById("high-v").textContent = l === "en" ? "transcendent" : "transcendente";
-  document.getElementById("low-d").textContent = l === "en" ? "bare" : "pelado";
-  document.getElementById("high-d").textContent = l === "en" ? "kaleidoscopic" : "caleidoscópico";
+  document.getElementById("low-a").textContent = getAxisEnd(AROUSAL, "low", l);
+  document.getElementById("high-a").textContent = getAxisEnd(AROUSAL, "high", l);
+
+  document.getElementById("low-v").textContent = getAxisEnd(VALENCE, "low", l);
+  document.getElementById("high-v").textContent = getAxisEnd(VALENCE, "high", l);
+
+  document.getElementById("low-d").textContent = getAxisEnd(DEPTH, "low", l);
+  document.getElementById("high-d").textContent = getAxisEnd(DEPTH, "high", l);
 
   renderGenreList();
+  renderSubgenreSelect();
   update();
 }
 
 // ─── Genre dropdown ───
 function toggleGenre() {
+  if (!useGenre) return;
+
   genreOpen = !genreOpen;
   const drop = document.getElementById("genre-drop");
   const arrow = document.getElementById("genre-arrow");
+
   if (genreOpen) {
     drop.classList.add("open");
     arrow.textContent = "▲";
@@ -421,8 +1004,11 @@ function toggleGenre() {
 function selectGenre(idx) {
   genreIdx = idx;
   genreOpen = false;
+
   document.getElementById("genre-drop").classList.remove("open");
   document.getElementById("genre-arrow").textContent = "▼";
+
+  renderSubgenreSelect();
   update();
 }
 
@@ -434,16 +1020,27 @@ function renderGenreList() {
   const q = document.getElementById("genre-search").value.toLowerCase();
   const container = document.getElementById("genre-list");
   container.innerHTML = "";
+
   let count = 0;
+
   GENRES.forEach((g, i) => {
-    if (q && !g[0].toLowerCase().includes(q) && !g[1].toLowerCase().includes(q)) return;
+    if (
+      q &&
+      !g[0].toLowerCase().includes(q) &&
+      !g[1].toLowerCase().includes(q)
+    ) {
+      return;
+    }
+
     const div = document.createElement("div");
     div.className = "genre-opt" + (i === genreIdx ? " active" : "");
     div.textContent = getGenreName(i, lang);
     div.onclick = () => selectGenre(i);
+
     container.appendChild(div);
     count++;
   });
+
   if (count === 0) {
     const div = document.createElement("div");
     div.style.cssText = "padding:16px;color:#555;font-family:'DM Mono',monospace;font-size:12px;text-align:center";
@@ -452,18 +1049,35 @@ function renderGenreList() {
   }
 }
 
+// ─── Subgenre select ───
+function renderSubgenreSelect() {
+  const select = document.getElementById("subgenre-select");
+  const genreKey = getGenreKey(genreIdx);
+  const subgenres = SUBGENRES[genreKey] || [];
+
+  select.innerHTML = "";
+
+  const emptyOption = document.createElement("option");
+  emptyOption.value = "";
+  emptyOption.textContent = lang === "en" ? "Any subgenre" : "Qualquer subgênero";
+  select.appendChild(emptyOption);
+
+  subgenres.forEach(subgenre => {
+    const option = document.createElement("option");
+    option.value = subgenre[0];
+    option.textContent = getSubgenreName(subgenre, lang);
+    select.appendChild(option);
+  });
+}
+
 // ─── Copy ───
 function handleCopy() {
   const text = document.getElementById("prompt-output").textContent;
   const btn = document.getElementById("copy-btn");
+
   try {
     navigator.clipboard.writeText(text).then(() => {
-      btn.textContent = "✓";
-      btn.classList.add("success");
-      setTimeout(() => {
-        btn.textContent = lang === "en" ? "copy" : "copiar";
-        btn.classList.remove("success");
-      }, 1400);
+      showCopySuccess(btn);
     });
   } catch {
     const ta = document.createElement("textarea");
@@ -473,13 +1087,18 @@ function handleCopy() {
     ta.select();
     document.execCommand("copy");
     document.body.removeChild(ta);
-    btn.textContent = "✓";
-    btn.classList.add("success");
-    setTimeout(() => {
-      btn.textContent = lang === "en" ? "copy" : "copiar";
-      btn.classList.remove("success");
-    }, 1400);
+    showCopySuccess(btn);
   }
+}
+
+function showCopySuccess(btn) {
+  btn.textContent = "✓";
+  btn.classList.add("success");
+
+  setTimeout(() => {
+    btn.textContent = lang === "en" ? "copy" : "copiar";
+    btn.classList.remove("success");
+  }, 1400);
 }
 
 // ─── Close genre on outside click ───
@@ -492,7 +1111,8 @@ document.addEventListener("click", (e) => {
 });
 
 // ─── Init ───
-update();
+setLang("en");
+toggleUseGenre();
 </script>
 </body>
 </html>
