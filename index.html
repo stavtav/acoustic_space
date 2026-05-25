@@ -240,6 +240,7 @@
   <div style="margin-bottom:28px">
     <div class="prompt-box" id="prompt-output"></div>
     <div class="prompt-actions">
+      <button class="btn" id="random-btn" onclick="generateRandomPrompt()">random</button>
       <button class="btn" id="copy-btn" onclick="handleCopy()">copy</button>
     </div>
   </div>
@@ -851,11 +852,40 @@ function getStyleName(ln) {
   return getGenreName(genreIdx, ln);
 }
 
+function randomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+
 // ─── Slider fill ───
 function updateSliderFill(slider, color) {
   const pct = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
   slider.style.background =
     `linear-gradient(to right, ${color} 0%, ${color} ${pct}%, #404040 ${pct}%, #404040 100%)`;
+}
+
+// ─── Random prompt ───
+function generateRandomPrompt() {
+  document.getElementById("slider-a").value = randomInt(AROUSAL.length);
+  document.getElementById("slider-v").value = randomInt(VALENCE.length);
+  document.getElementById("slider-d").value = randomInt(DEPTH.length);
+
+  const includeGenre = randomInt(GENRES.length + 1) !== 0;
+  document.getElementById("use-genre").checked = includeGenre;
+
+  if (includeGenre) {
+    genreIdx = randomInt(GENRES.length);
+    renderSubgenreSelect();
+
+    const genreKey = getGenreKey(genreIdx);
+    const subgenres = SUBGENRES[genreKey] || [];
+    const subgenreSelect = document.getElementById("subgenre-select");
+    const subgenreIdx = randomInt(subgenres.length + 1);
+
+    subgenreSelect.value = subgenreIdx === 0 ? "" : subgenres[subgenreIdx - 1][0];
+  }
+
+  toggleUseGenre();
+  return document.getElementById("prompt-output").textContent;
 }
 
 // ─── Prompt ───
@@ -945,6 +975,9 @@ function setLang(l) {
 
   document.getElementById("copy-btn").textContent =
     l === "en" ? "copy" : "copiar";
+
+  document.getElementById("random-btn").textContent =
+    l === "en" ? "random" : "aleatório";
 
   document.getElementById("use-genre-label").textContent =
     l === "en" ? "Use genre" : "Usar gênero";
