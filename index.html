@@ -52,6 +52,46 @@
   .btn:hover { border-color: #555; color: #e0e0e0; background: #252525; }
   .btn.success { color: #1DB954; border-color: #1DB954; }
 
+  /* Modes */
+  .mode-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 18px;
+    padding: 4px;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+  }
+
+  .mode-tab {
+    cursor: pointer;
+    padding: 9px 12px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #777;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    transition: all .15s;
+  }
+
+  .mode-tab.active {
+    color: #fff;
+    background: #1DB954;
+  }
+
+  .mode-tab:hover:not(.active) {
+    color: #aaa;
+    background: #242424;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeUp .15s ease; }
+
   /* Options */
   .options-section {
     margin-bottom: 20px;
@@ -86,7 +126,8 @@
 
   /* Genre */
   .genre-section,
-  .subgenre-section {
+  .subgenre-section,
+  .scene-section {
     position: relative;
     margin-bottom: 20px;
   }
@@ -125,6 +166,11 @@
     appearance: none;
     -webkit-appearance: none;
     outline: none;
+  }
+
+  .scene-select {
+    min-height: 148px;
+    line-height: 1.45;
   }
 
   .genre-drop {
@@ -236,6 +282,12 @@
     </div>
   </div>
 
+  <!-- Modes -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tab-music" onclick="setMode('music')">music</button>
+    <button class="mode-tab" id="tab-scenes" onclick="setMode('scenes')">scenes</button>
+  </div>
+
   <!-- Prompt -->
   <div style="margin-bottom:28px">
     <div class="prompt-box" id="prompt-output"></div>
@@ -245,77 +297,86 @@
     </div>
   </div>
 
-  <!-- Genre Toggle -->
-  <div class="options-section">
-    <label class="check-row">
-      <input type="checkbox" id="use-genre" checked onchange="toggleUseGenre()">
-      <span class="check-label" id="use-genre-label">Use genre</span>
-    </label>
+  <div class="panel active" id="music-panel">
+    <!-- Genre Toggle -->
+    <div class="options-section">
+      <label class="check-row">
+        <input type="checkbox" id="use-genre" checked onchange="toggleUseGenre()">
+        <span class="check-label" id="use-genre-label">Use genre</span>
+      </label>
+    </div>
+
+    <!-- Genre -->
+    <div class="genre-section" id="genre-section">
+      <span class="section-label" id="genre-label">Genre</span>
+      <button class="genre-trigger" onclick="toggleGenre()">
+        <span id="genre-display"></span>
+        <span class="arrow" id="genre-arrow">▼</span>
+      </button>
+      <div class="genre-drop" id="genre-drop">
+        <input class="genre-input" id="genre-search" placeholder="search..." oninput="filterGenres()">
+        <div id="genre-list"></div>
+      </div>
+    </div>
+
+    <!-- Subgenre -->
+    <div class="subgenre-section visible" id="subgenre-section">
+      <span class="section-label" id="subgenre-label">Subgenre</span>
+      <select class="select-control" id="subgenre-select" onchange="update()"></select>
+    </div>
+
+    <!-- Arousal -->
+    <div class="axis">
+      <div class="axis-head">
+        <span class="axis-name" id="label-a">Arousal</span>
+        <span class="axis-word" id="word-a" style="color:#E8764B"></span>
+      </div>
+      <input type="range" class="sl-a" id="slider-a" min="0" max="6" step="1" value="3" oninput="update()">
+      <div class="axis-ends">
+        <span id="low-a">slow</span>
+        <span id="high-a">intense</span>
+      </div>
+    </div>
+
+    <!-- Valence -->
+    <div class="axis">
+      <div class="axis-head">
+        <span class="axis-name" id="label-v">Valence</span>
+        <span class="axis-word" id="word-v" style="color:#5BA8E8"></span>
+      </div>
+      <input type="range" class="sl-v" id="slider-v" min="0" max="6" step="1" value="3" oninput="update()">
+      <div class="axis-ends">
+        <span id="low-v">sad</span>
+        <span id="high-v">euphoric</span>
+      </div>
+    </div>
+
+    <!-- Depth -->
+    <div class="axis">
+      <div class="axis-head">
+        <span class="axis-name" id="label-d">Depth</span>
+        <span class="axis-word" id="word-d" style="color:#C89BF2"></span>
+      </div>
+      <input type="range" class="sl-d" id="slider-d" min="0" max="6" step="1" value="3" oninput="update()">
+      <div class="axis-ends">
+        <span id="low-d">simple</span>
+        <span id="high-d">complex</span>
+      </div>
+    </div>
+
+    <!-- Coords -->
+    <div class="coords">
+      <span><span style="color:#E8764B">A</span><span style="color:#555" id="coord-a">:4/7</span></span>
+      <span><span style="color:#5BA8E8">V</span><span style="color:#555" id="coord-v">:4/7</span></span>
+      <span><span style="color:#C89BF2">D</span><span style="color:#555" id="coord-d">:4/7</span></span>
+    </div>
   </div>
 
-  <!-- Genre -->
-  <div class="genre-section" id="genre-section">
-    <span class="section-label" id="genre-label">Genre</span>
-    <button class="genre-trigger" onclick="toggleGenre()">
-      <span id="genre-display"></span>
-      <span class="arrow" id="genre-arrow">▼</span>
-    </button>
-    <div class="genre-drop" id="genre-drop">
-      <input class="genre-input" id="genre-search" placeholder="search..." oninput="filterGenres()">
-      <div id="genre-list"></div>
+  <div class="panel" id="scenes-panel">
+    <div class="scene-section">
+      <span class="section-label" id="scene-label">Scene</span>
+      <select class="select-control scene-select" id="scene-select" size="8" onchange="update()"></select>
     </div>
-  </div>
-
-  <!-- Subgenre -->
-  <div class="subgenre-section visible" id="subgenre-section">
-    <span class="section-label" id="subgenre-label">Subgenre</span>
-    <select class="select-control" id="subgenre-select" onchange="update()"></select>
-  </div>
-
-  <!-- Arousal -->
-  <div class="axis">
-    <div class="axis-head">
-      <span class="axis-name" id="label-a">Arousal</span>
-      <span class="axis-word" id="word-a" style="color:#E8764B"></span>
-    </div>
-    <input type="range" class="sl-a" id="slider-a" min="0" max="6" step="1" value="3" oninput="update()">
-    <div class="axis-ends">
-      <span id="low-a">slow</span>
-      <span id="high-a">intense</span>
-    </div>
-  </div>
-
-  <!-- Valence -->
-  <div class="axis">
-    <div class="axis-head">
-      <span class="axis-name" id="label-v">Valence</span>
-      <span class="axis-word" id="word-v" style="color:#5BA8E8"></span>
-    </div>
-    <input type="range" class="sl-v" id="slider-v" min="0" max="6" step="1" value="3" oninput="update()">
-    <div class="axis-ends">
-      <span id="low-v">sad</span>
-      <span id="high-v">euphoric</span>
-    </div>
-  </div>
-
-  <!-- Depth -->
-  <div class="axis">
-    <div class="axis-head">
-      <span class="axis-name" id="label-d">Depth</span>
-      <span class="axis-word" id="word-d" style="color:#C89BF2"></span>
-    </div>
-    <input type="range" class="sl-d" id="slider-d" min="0" max="6" step="1" value="3" oninput="update()">
-    <div class="axis-ends">
-      <span id="low-d">simple</span>
-      <span id="high-d">complex</span>
-    </div>
-  </div>
-
-  <!-- Coords -->
-  <div class="coords">
-    <span><span style="color:#E8764B">A</span><span style="color:#555" id="coord-a">:4/7</span></span>
-    <span><span style="color:#5BA8E8">V</span><span style="color:#555" id="coord-v">:4/7</span></span>
-    <span><span style="color:#C89BF2">D</span><span style="color:#555" id="coord-d">:4/7</span></span>
   </div>
 </div>
 
@@ -363,7 +424,6 @@ const GENRES = [
   ["Blues", "Blues"],
   ["Breakbeat", "Breakbeat"],
   ["Brazilian", "Música Brasileira"],
-  ["Cinematic", "Música Cinematográfica"],
   ["Classical", "Música Clássica"],
   ["Country", "Country"],
   ["Dance", "Dance"],
@@ -448,19 +508,6 @@ const SUBGENRES = {
     ["Sambass", "Sambass"],
     ["Sertanejo", "Sertanejo"],
     ["Tropicália", "Tropicália"],
-  ],
-
-  "Cinematic": [
-    ["Action", "Ação"],
-    ["Adventure", "Aventura"],
-    ["Drama", "Drama"],
-    ["Horror", "Terror"],
-    ["Mystery", "Mistério"],
-    ["Suspense", "Suspense"],
-    ["Supernatural", "Sobrenatural"],
-    ["Tragedy", "Tragédia"],
-    ["Main Title", "Tema Principal"],
-    ["Orchestral Hybrid", "Orquestral Híbrido"],
   ],
 
   "Classical": [
@@ -805,9 +852,133 @@ const SUBGENRES = {
   ],
 };
 
+const SCENES = [
+  // Liminal & transitional
+  ["Driving alone after saying goodbye", "Dirigindo sozinho depois de se despedir"],
+  ["The hour before a city wakes up", "A hora antes da cidade acordar"],
+  ["Walking through fog toward a light you can't reach", "Caminhando na névoa em direção a uma luz que não se alcança"],
+  ["The moment a storm finally breaks", "O momento em que a tempestade finalmente cai"],
+  ["Waking up in a hotel and forgetting where you are", "Acordar num hotel sem lembrar onde está"],
+  ["The silence after the last guest leaves", "O silêncio depois que o último convidado vai embora"],
+  ["The exact moment fireworks end and silence returns", "O exato momento em que os fogos acabam e o silêncio volta"],
+  ["The pause between lightning and thunder", "A pausa entre o relâmpago e o trovão"],
+  ["The last five minutes of a road trip", "Os últimos cinco minutos de uma viagem de estrada"],
+  ["Falling asleep on a moving train", "Dormindo num trem em movimento"],
+
+  // Solitary states
+  ["Staring at the ceiling unable to sleep", "Encarando o teto sem conseguir dormir"],
+  ["Sitting in a parked car during a downpour", "Parado dentro do carro durante um temporal"],
+  ["Typing alone in a lit office at midnight", "Digitando sozinho no escritório iluminado à meia-noite"],
+  ["Reading by candlelight during a blackout", "Lendo à luz de vela durante um apagão"],
+  ["Swimming alone in dark water at night", "Nadando sozinho em água escura à noite"],
+  ["Walking home through snow with dead headphones", "Voltando pra casa na neve com o fone descarregado"],
+  ["Lying in tall grass staring at the sky", "Deitado no mato alto olhando pro céu"],
+  ["Morning run before the world has any demands", "Corrida matinal antes do mundo cobrar qualquer coisa"],
+  ["Watching a sunset you know you'll forget", "Assistindo um pôr do sol que você sabe que vai esquecer"],
+  ["A window seat above the clouds", "Assento na janela acima das nuvens"],
+
+  // Domestic & intimate
+  ["Kitchen at dawn before anyone else is up", "Cozinha na aurora antes de qualquer um acordar"],
+  ["Someone practicing piano in the next room", "Alguém praticando piano no quarto ao lado"],
+  ["Dancing alone in the kitchen at midnight", "Dançando sozinho na cozinha à meia-noite"],
+  ["Cooking alone with the windows steamed up", "Cozinhando sozinho com as janelas embaçadas"],
+  ["The smell of coffee in a silent house", "O cheiro de café numa casa em silêncio"],
+  ["A voice humming in another room", "Uma voz cantarolando em outro cômodo"],
+  ["The sound a house makes when it settles at night", "O som que a casa faz quando se acomoda à noite"],
+  ["Clothes drying on a line in warm wind", "Roupas secando no varal com vento quente"],
+  ["The weight of a blanket on a cold morning", "O peso do cobertor numa manhã fria"],
+  ["Candlelit bath with the window cracked open", "Banho à luz de vela com a janela entreaberta"],
+
+  // Collective & social
+  ["Dancing with your eyes closed in a crowd", "Dançando de olhos fechados no meio da multidão"],
+  ["Slow dance at the end of the world", "Dança lenta no fim do mundo"],
+  ["Dancing at a wedding after everyone you know has left", "Dançando num casamento depois que todos que você conhece já foram"],
+  ["A crowded room where you don't know anyone", "Um salão cheio onde você não conhece ninguém"],
+  ["Street musician playing to no one", "Músico de rua tocando pra ninguém"],
+  ["Walking into a church during someone else's prayer", "Entrando numa igreja durante a oração de outra pessoa"],
+  ["A marketplace winding down for the night", "Uma feira se desmontando pro fim da noite"],
+  ["Last record playing in a closing bar", "Último disco tocando num bar fechando"],
+  ["Strangers sharing silence on a night bus", "Desconhecidos dividindo silêncio no ônibus da madrugada"],
+  ["A protest march finding its rhythm", "Uma marcha encontrando seu ritmo"],
+
+  // Altered & internal states
+  ["Fever dream with the window open", "Sonho de febre com a janela aberta"],
+  ["Old radio playing between stations", "Rádio antigo sintonizado entre estações"],
+  ["The static between radio stations at 4am", "O chiado entre estações de rádio às 4 da manhã"],
+  ["An answering machine message from years ago", "Uma mensagem na secretária eletrônica de anos atrás"],
+  ["A handwritten letter you'll never send", "Uma carta à mão que você nunca vai mandar"],
+  ["The last page of a book you didn't want to end", "A última página de um livro que você não queria que acabasse"],
+  ["Old photographs spread across a table", "Fotografias antigas espalhadas sobre a mesa"],
+  ["An old photograph of people you'll never meet", "Uma foto antiga de pessoas que você nunca vai conhecer"],
+  ["The moment you realize you're already home", "O momento em que você percebe que já está em casa"],
+  ["Elevator music in a building that doesn't exist", "Música de elevador num prédio que não existe"],
+
+  // Time & light
+  ["Morning light through dusty curtains", "Luz da manhã através de cortinas empoeiradas"],
+  ["Dust floating in a beam of afternoon light", "Poeira flutuando num feixe de luz da tarde"],
+  ["An unmade bed in late afternoon light", "Uma cama desfeita na luz do fim da tarde"],
+  ["Shadows of trees moving across a bedroom wall", "Sombras de árvores se movendo na parede do quarto"],
+  ["First warm day after months of winter", "Primeiro dia quente depois de meses de inverno"],
+  ["A garden sprinkler turning in afternoon heat", "Um aspersor girando no calor da tarde"],
+  ["Streetlights reflecting in puddles after midnight", "Postes refletidos em poças depois da meia-noite"],
+  ["Moths circling a porch light in summer", "Mariposas circulando a luz da varanda no verão"],
+  ["Paper lanterns swaying over an empty table", "Lanternas de papel balançando sobre uma mesa vazia"],
+  ["A bird singing before anyone else is awake", "Um pássaro cantando antes de qualquer um acordar"],
+
+  // Abandonment & stillness
+  ["Empty swimming pool in late summer heat", "Piscina vazia no calor do fim do verão"],
+  ["A carousel turning with nobody on it", "Um carrossel girando sem ninguém"],
+  ["Playground at dusk with no children", "Parquinho ao anoitecer sem nenhuma criança"],
+  ["Wind through an abandoned factory", "Vento passando por uma fábrica abandonada"],
+  ["Abandoned amusement park in autumn mist", "Parque de diversões abandonado na bruma do outono"],
+  ["An attic where time stopped twenty years ago", "Um sótão onde o tempo parou vinte anos atrás"],
+  ["A mirror in a room where the party just ended", "Um espelho num quarto onde a festa acabou de terminar"],
+  ["The echo inside an empty cathedral", "O eco dentro de uma catedral vazia"],
+  ["Waiting room with a clock ticking", "Sala de espera com um relógio batendo"],
+  ["An old projector flickering with no film loaded", "Um projetor antigo piscando sem filme"],
+
+  // Water & weather
+  ["A thunderstorm watched from a warm bed", "Uma tempestade assistida de uma cama quentinha"],
+  ["Rain drumming on the roof of a car", "Chuva tamborilando no teto do carro"],
+  ["Waking up to rain you weren't expecting", "Acordar com uma chuva que você não esperava"],
+  ["Steam rising from wet pavement after rain", "Vapor subindo do asfalto molhado depois da chuva"],
+  ["The rhythm of windshield wipers in heavy rain", "O ritmo dos limpadores de para-brisa na chuva forte"],
+  ["Underwater with sunlight above", "Debaixo d'água com a luz do sol lá em cima"],
+  ["Walking into the sea fully clothed", "Entrando no mar de roupa"],
+  ["Wading through warm water in the dark", "Caminhando em água morna no escuro"],
+  ["A lighthouse beam cutting through fog", "O farol cortando a neblina"],
+  ["The drip of a faucet in complete silence", "A gota de uma torneira no silêncio completo"],
+
+  // Urban & industrial
+  ["The buzz of a neon sign on a quiet street", "O zumbido de um letreiro neon numa rua quieta"],
+  ["Watching city lights from a hilltop", "Olhando as luzes da cidade do alto de um morro"],
+  ["A balcony overlooking a city you don't know", "Uma varanda com vista pra uma cidade desconhecida"],
+  ["Dimly lit corridor of a sleeping hotel", "Corredor mal iluminado de um hotel adormecido"],
+  ["Driving through a tunnel with the radio on", "Atravessando um túnel com o rádio ligado"],
+  ["The vibration of a bridge as traffic passes", "A vibração de uma ponte com o trânsito passando"],
+  ["Laundry spinning in a coin machine at night", "Roupa girando na lavanderia automática de noite"],
+  ["The hum of a refrigerator at 3am", "O zumbido da geladeira às 3 da manhã"],
+  ["A phone ringing in an empty house", "Um telefone tocando numa casa vazia"],
+  ["Long hallway with a window at the end", "Corredor comprido com uma janela no fundo"],
+
+  // Warmth & nostalgia
+  ["A dog sleeping by a fireplace", "Um cachorro dormindo junto à lareira"],
+  ["The creak of a rocking chair on a porch", "O rangido de uma cadeira de balanço na varanda"],
+  ["A bookshop that smells like dust and wood", "Uma livraria com cheiro de poeira e madeira"],
+  ["The stillness inside a greenhouse", "A quietude dentro de uma estufa"],
+  ["Incense smoke in a dark room", "Fumaça de incenso num quarto escuro"],
+  ["A telescope pointed at a sky full of stars", "Um telescópio apontado pra um céu cheio de estrelas"],
+  ["Backyard birthday under string lights", "Aniversário no quintal sob luzinhas penduradas"],
+  ["Cigarette smoke rising in still air", "Fumaça de cigarro subindo no ar parado"],
+  ["The moment before you jump into cold water", "O momento antes de pular na água fria"],
+  ["A train whistle heard from very far away", "Um apito de trem ouvido de muito longe"],
+];
+
 // ─── State ───
 let lang = "en";
+let mode = "music";
 let genreIdx = GENRES.findIndex(g => g[0] === "Electronic");
+let sceneIdx = 0;
 let genreOpen = false;
 let useGenre = true;
 
@@ -852,6 +1023,10 @@ function getStyleName(ln) {
   return getGenreName(genreIdx, ln);
 }
 
+function getSceneName(idx, ln) {
+  return ln === "pt" ? SCENES[idx][1] : SCENES[idx][0];
+}
+
 function randomInt(max) {
   return Math.floor(Math.random() * max);
 }
@@ -865,6 +1040,14 @@ function updateSliderFill(slider, color) {
 
 // ─── Random prompt ───
 function generateRandomPrompt() {
+  if (mode === "scenes") {
+    return generateRandomScenePrompt();
+  }
+
+  return generateRandomMusicPrompt();
+}
+
+function generateRandomMusicPrompt() {
   document.getElementById("slider-a").value = randomInt(AROUSAL.length);
   document.getElementById("slider-v").value = randomInt(VALENCE.length);
   document.getElementById("slider-d").value = randomInt(DEPTH.length);
@@ -888,6 +1071,13 @@ function generateRandomPrompt() {
   return document.getElementById("prompt-output").textContent;
 }
 
+function generateRandomScenePrompt() {
+  sceneIdx = randomInt(SCENES.length);
+  document.getElementById("scene-select").value = String(sceneIdx);
+  update();
+  return document.getElementById("prompt-output").textContent;
+}
+
 // ─── Prompt ───
 function buildPrompt({ valence, arousal, depth, style, ln, includeGenre }) {
   if (ln === "pt") {
@@ -905,8 +1095,21 @@ function buildPrompt({ valence, arousal, depth, style, ln, includeGenre }) {
   return `Let's go for a ${style} mix that feels ${valence}, sounds ${arousal}, and has ${depth} production.`;
 }
 
+function buildScenePrompt({ scene, ln }) {
+  if (ln === "pt") {
+    return `Música para ${scene}.`;
+  }
+
+  return `Music for ${scene}.`;
+}
+
 // ─── Core update ───
 function update() {
+  if (mode === "scenes") {
+    updateScenePrompt();
+    return;
+  }
+
   const a = +document.getElementById("slider-a").value;
   const v = +document.getElementById("slider-v").value;
   const d = +document.getElementById("slider-d").value;
@@ -942,6 +1145,16 @@ function update() {
   updateSliderFill(document.getElementById("slider-d"), "#C89BF2");
 }
 
+function updateScenePrompt() {
+  const select = document.getElementById("scene-select");
+  sceneIdx = +(select.value || 0);
+
+  document.getElementById("prompt-output").textContent = buildScenePrompt({
+    scene: getSceneName(sceneIdx, lang),
+    ln: lang,
+  });
+}
+
 // ─── Use genre toggle ───
 function toggleUseGenre() {
   useGenre = document.getElementById("use-genre").checked;
@@ -961,6 +1174,23 @@ function toggleUseGenre() {
   update();
 }
 
+// ─── Mode tabs ───
+function setMode(nextMode) {
+  mode = nextMode;
+
+  document.getElementById("tab-music").className = "mode-tab" + (mode === "music" ? " active" : "");
+  document.getElementById("tab-scenes").className = "mode-tab" + (mode === "scenes" ? " active" : "");
+  document.getElementById("music-panel").className = "panel" + (mode === "music" ? " active" : "");
+  document.getElementById("scenes-panel").className = "panel" + (mode === "scenes" ? " active" : "");
+
+  document.getElementById("subtitle").textContent =
+    mode === "music"
+      ? (lang === "en" ? "Three axes · One prompt" : "Três eixos · Um prompt")
+      : (lang === "en" ? "Scenes · One prompt" : "Cenas · Um prompt");
+
+  update();
+}
+
 // ─── Language ───
 function setLang(l) {
   lang = l;
@@ -971,7 +1201,15 @@ function setLang(l) {
   document.getElementById("btn-pt").className = "lang-btn" + (l === "pt" ? " active" : "");
 
   document.getElementById("subtitle").textContent =
-    l === "en" ? "Three axes · One prompt" : "Três eixos · Um prompt";
+    mode === "music"
+      ? (l === "en" ? "Three axes · One prompt" : "Três eixos · Um prompt")
+      : (l === "en" ? "Scenes · One prompt" : "Cenas · Um prompt");
+
+  document.getElementById("tab-music").textContent =
+    l === "en" ? "music" : "música";
+
+  document.getElementById("tab-scenes").textContent =
+    l === "en" ? "scenes" : "cenas";
 
   document.getElementById("copy-btn").textContent =
     l === "en" ? "copy" : "copiar";
@@ -987,6 +1225,9 @@ function setLang(l) {
 
   document.getElementById("subgenre-label").textContent =
     l === "en" ? "Subgenre" : "Subgênero";
+
+  document.getElementById("scene-label").textContent =
+    l === "en" ? "Scene" : "Cena";
 
   document.getElementById("genre-search").placeholder =
     l === "en" ? "search..." : "buscar...";
@@ -1011,6 +1252,7 @@ function setLang(l) {
 
   renderGenreList();
   renderSubgenreSelect();
+  renderSceneSelect();
   update();
 }
 
@@ -1101,6 +1343,21 @@ function renderSubgenreSelect() {
     option.textContent = getSubgenreName(subgenre, lang);
     select.appendChild(option);
   });
+}
+
+// ─── Scene select ───
+function renderSceneSelect() {
+  const select = document.getElementById("scene-select");
+  select.innerHTML = "";
+
+  SCENES.forEach((scene, idx) => {
+    const option = document.createElement("option");
+    option.value = String(idx);
+    option.textContent = getSceneName(idx, lang);
+    select.appendChild(option);
+  });
+
+  select.value = String(sceneIdx);
 }
 
 // ─── Copy ───
